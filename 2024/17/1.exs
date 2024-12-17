@@ -70,13 +70,12 @@ defmodule Day17 do
     # first outputs use least signigicant bits, last outputs use most signigicant bits (and fewer of them)
     # e.g. in output "0,1", 0 is produced from bits 1-6 and 1 is produced from bits 4-6
     # we figure out the bits from left (most significant) by iterating until affected outputs match
-    # e.g. xxx000 -> [0]
+    # e.g. xxx??? -> [?, 1]
     # once we have a matching output we can iterate on the next bits
-    # e.g. xxxyyy -> [0,1]
+    # e.g. xxxyyy -> [0, 1]
     # iterating on different bits each round until the whole output matches
     Enum.reduce((target_length - 1)..0, 0, fn i, a ->
       # check outputs that these bits can affect
-      # most signigicant bits
       target = Enum.slice(program, i, target_length - i)
 
       Stream.unfold(0, fn n -> {n, n + 1} end)
