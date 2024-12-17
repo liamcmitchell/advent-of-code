@@ -67,7 +67,7 @@ defmodule Day17 do
 
     # each output is produced from XORing the 3-10 least significant bits of A
     # each iteration A is bitshifted right by 3, so bits = length(output) * 3
-    # first outputs use least signigicant bits, last outputs use most signigicant bits (and fewer of them)
+    # first outputs use least significant bits, last outputs use most significant bits (and fewer of them)
     # e.g. in output "0,1", 0 is produced from bits 1-6 and 1 is produced from bits 4-6
     # we figure out the bits from left (most significant) by iterating until affected outputs match
     # e.g. xxx??? -> [?, 1]
