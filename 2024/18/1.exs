@@ -15,54 +15,39 @@ defmodule Day18 do
   def shortest(bytes, size) do
     map = MapSet.new(bytes)
     start = {0, 0}
-    unvisited = MapSet.new([start])
-    visited = MapSet.new()
-    scores = %{start => 0}
-    visit(map, size, unvisited, visited, scores, start) |> Map.get({size, size})
+    goal = {size, size}
+    unvisited = :queue.from_list([{0, start}])
+    seen = MapSet.new([start])
+    visit(map, size, unvisited, seen, goal)
   end
 
-  def visit(map, size, unvisited, visited, scores, pos) do
-    score = Map.get(scores, pos)
-
-    new_scores =
-      directions()
-      |> Enum.reduce(%{}, fn dir, acc ->
-        neighbour = add(pos, dir)
-
-        cond do
-          out_of_bounds(neighbour, size) ->
-            acc
-
-          MapSet.member?(visited, neighbour) ->
-            acc
-
-          MapSet.member?(map, neighbour) ->
-            acc
-
-          true ->
-            cur_score = Map.get(scores, neighbour, 999_999)
-            new_score = score + 1
-
-            if new_score < cur_score do
-              Map.put(acc, neighbour, new_score)
-            else
-              acc
-            end
-        end
-      end)
-
-    visited = MapSet.put(visited, pos)
-
-    unvisited =
-      unvisited |> MapSet.delete(pos) |> MapSet.union(new_scores |> Map.keys() |> MapSet.new())
-
-    scores = scores |> Map.merge(new_scores)
-
-    if MapSet.size(unvisited) == 0 do
-      scores
+  def visit(map, size, unvisited, seen, goal) do
+    if :queue.is_empty(unvisited) do
+      nil
     else
-      next = unvisited |> Enum.min_by(fn pos -> scores |> Map.get(pos) end)
-      visit(map, size, unvisited, visited, scores, next)
+      {score, pos} = :queue.get(unvisited)
+
+      next =
+        directions()
+        |> Enum.map(&add(&1, pos))
+        |> Enum.reject(fn pos ->
+          out_of_bounds(pos, size) or MapSet.member?(seen, pos) or MapSet.member?(map, pos)
+        end)
+
+      if Enum.member?(next, goal) do
+        score + 1
+      else
+        unvisited =
+          next
+          |> Enum.reduce(unvisited, fn next, unvisited ->
+            :queue.in({score + 1, next}, unvisited)
+          end)
+          |> :queue.drop()
+
+        seen = seen |> MapSet.union(MapSet.new(next))
+
+        visit(map, size, unvisited, seen, goal)
+      end
     end
   end
 
