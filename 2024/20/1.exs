@@ -67,8 +67,9 @@ defmodule Day20 do
   def search_area(n) do
     for x <- -n..n,
         y <- -n..n,
-        abs(x) + abs(y) <= n and not (x == 0 and y == 0) do
-      {{x, y}, abs(x) + abs(y)}
+        duration = abs(x) + abs(y),
+        duration > 0 and duration <= n do
+      {{x, y}, duration}
     end
   end
 
