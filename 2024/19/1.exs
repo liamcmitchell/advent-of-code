@@ -7,7 +7,7 @@ defmodule Day19 do
     {towels, patterns}
   end
 
-  def part1(file) do
+  def part(1, file) do
     {towels, patterns} = parse(file)
     tree = towel_tree(towels)
 
@@ -15,7 +15,7 @@ defmodule Day19 do
     |> Enum.count(&(possibilities(&1, tree) > 0))
   end
 
-  def part2(file) do
+  def part(2, file) do
     {towels, patterns} = parse(file)
     tree = towel_tree(towels)
 
@@ -71,9 +71,16 @@ defmodule Day19 do
       end
     end)
   end
+
+  def run(part, input) do
+    {time, value} = :timer.tc(&part/2, [part, input])
+    time = :erlang.float_to_binary(time / 1000, decimals: 1)
+
+    IO.inspect(value, label: "Part #{part} #{input} (#{time}ms)")
+  end
 end
 
-Day19.part1("example") |> IO.inspect(label: "part1 example")
-Day19.part1("input") |> IO.inspect(label: "part1 input")
-Day19.part2("example") |> IO.inspect(label: "part2 example")
-Day19.part2("input") |> IO.inspect(label: "part2 input")
+Day19.run(1, "example")
+Day19.run(1, "input")
+Day19.run(2, "example")
+Day19.run(2, "input")
