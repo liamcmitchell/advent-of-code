@@ -1,6 +1,4 @@
 defmodule Day22 do
-  import Bitwise
-
   def parse(file) do
     text = File.read!(Path.join(Path.dirname(__ENV__.file), file))
 
@@ -9,18 +7,9 @@ defmodule Day22 do
     |> Enum.map(&String.to_integer/1)
   end
 
-  def solve(numbers, n) do
-    numbers
-    |> Enum.map(fn number ->
-      1..n
-      |> Enum.reduce(number, fn _, number ->
-        next(number)
-      end)
-    end)
-    |> Enum.sum()
-  end
-
   def next(number) do
+    import Bitwise
+
     number =
       number
       |> bsl(6)
@@ -42,18 +31,14 @@ defmodule Day22 do
     number
   end
 
-  def price(number) do
-    number |> Integer.digits() |> Enum.at(-1)
-  end
+  def price(number), do: number |> rem(10)
 
   def part(1, file) do
     file
     |> parse()
     |> Enum.map(fn number ->
       1..2000
-      |> Enum.reduce(number, fn _, number ->
-        next(number)
-      end)
+      |> Enum.reduce(number, fn _, n -> next(n) end)
     end)
     |> Enum.sum()
   end
@@ -61,33 +46,29 @@ defmodule Day22 do
   def part(2, file) do
     file
     |> parse()
-    |> Enum.map(fn number ->
+    |> Enum.reduce(%{}, fn number, sales ->
       1..2000
-      |> Enum.reduce({%{}, number, price(number), []}, fn _,
-                                                          {prices, number, prev_price,
-                                                           price_changes} ->
+      |> Enum.reduce({sales, MapSet.new(), number, price(number), nil, nil, nil}, fn _, acc ->
+        {sales, seen, number, prev_price, pc1, pc2, pc3} = acc
         number = number |> next()
         price = number |> price()
-        price_change = price - prev_price
-        price_changes = [price_change | price_changes]
-        sequence = price_changes |> Enum.slice(0, 4)
+        pc0 = price - prev_price
 
-        prices =
-          if length(sequence) == 4 do
-            prices |> Map.put_new(sequence, price)
-          else
-            prices
-          end
-
-        {prices, number, price, price_changes}
+        with false <- pc3 == nil,
+             sequence <- [pc0, pc1, pc2, pc3],
+             false <- MapSet.member?(seen, sequence) do
+          seen = MapSet.put(seen, sequence)
+          total = Map.get(sales, sequence, 0) + price
+          sales = Map.put(sales, sequence, total)
+          {sales, seen, number, price, pc0, pc1, pc2}
+        else
+          _ ->
+            {sales, seen, number, price, pc0, pc1, pc2}
+        end
       end)
       |> elem(0)
-      |> Enum.to_list()
     end)
-    |> Enum.concat()
-    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-    |> Enum.map(&elem(&1, 1))
-    |> Enum.map(&Enum.sum/1)
+    |> Map.values()
     |> Enum.max()
   end
 
