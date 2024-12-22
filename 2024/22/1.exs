@@ -55,7 +55,7 @@ defmodule Day22 do
         pc0 = price - prev_price
 
         with false <- pc3 == nil,
-             sequence <- [pc0, pc1, pc2, pc3],
+             <<sequence::integer-20>> <- <<pc0::5, pc1::5, pc2::5, pc3::5>>,
              false <- MapSet.member?(seen, sequence) do
           seen = MapSet.put(seen, sequence)
           total = Map.get(sales, sequence, 0) + price
