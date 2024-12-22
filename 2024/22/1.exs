@@ -58,8 +58,7 @@ defmodule Day22 do
              <<sequence::integer-20>> <- <<pc0::5, pc1::5, pc2::5, pc3::5>>,
              false <- MapSet.member?(seen, sequence) do
           seen = MapSet.put(seen, sequence)
-          total = Map.get(sales, sequence, 0) + price
-          sales = Map.put(sales, sequence, total)
+          sales = Map.update(sales, sequence, price, &(&1 + price))
           {sales, seen, number, price, pc0, pc1, pc2}
         else
           _ ->
