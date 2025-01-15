@@ -1,4 +1,4 @@
-input = File.read!("2024/03/input")
+input = File.read!("2024/03/input.txt")
 
 # Part 1
 Regex.scan(~r/mul\((\d{1,3}),(\d{1,3})\)/, input)

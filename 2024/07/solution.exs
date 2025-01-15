@@ -1,4 +1,4 @@
-input = File.read!(Path.join(Path.dirname(__ENV__.file), "input"))
+input = File.read!(Path.join(Path.dirname(__ENV__.file), "input.txt"))
 
 # Part 1
 equations =

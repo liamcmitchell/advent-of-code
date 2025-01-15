@@ -3,22 +3,16 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"os"
+	"path"
 	"strings"
 	"time"
 )
 
-//go:embed example.txt
-var example string
-
-//go:embed example2.txt
-var example2 string
-
-//go:embed input.txt
-var input string
-
-func part1(name, input string) {
+func part1(name string) {
+	input, _ := os.ReadFile(name)
 	start := time.Now()
-	lines := strings.Split(input, "\n")
+	lines := strings.Split(string(input), "\n")
 	total := 0
 	for _, line := range lines {
 		var numbers []int
@@ -30,15 +24,16 @@ func part1(name, input string) {
 		}
 		total += numbers[0]*10 + numbers[len(numbers)-1]
 	}
-	fmt.Println("Part 1", name, total, time.Now().Sub(start).String())
+	fmt.Println("Part 1", path.Base(name), total, time.Now().Sub(start).String())
 }
 
-func part2(name, input string) {
+func part2(name string) {
+	input, _ := os.ReadFile(name)
 	start := time.Now()
 
 	words := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
 
-	lines := strings.Split(input, "\n")
+	lines := strings.Split(string(input), "\n")
 	total := 0
 	for _, line := range lines {
 		first := 0
@@ -59,12 +54,12 @@ func part2(name, input string) {
 		}
 		total += first*10 + last
 	}
-	fmt.Println("Part 2", name, total, time.Now().Sub(start).String())
+	fmt.Println("Part 2", path.Base(name), total, time.Now().Sub(start).String())
 }
 
 func main() {
-	part1("example", example)
-	part1("input", input)
-	part2("example2", example2)
-	part2("input", input)
+	part1("2023/01/example.txt")
+	part1("2023/01/input.txt")
+	part2("2023/01/example2.txt")
+	part2("2023/01/input.txt")
 }

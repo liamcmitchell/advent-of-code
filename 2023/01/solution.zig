@@ -1,16 +1,17 @@
 const std = @import("std");
 
-const example = @embedFile("example.txt");
-const example2 = @embedFile("example2.txt");
-const input = @embedFile("input.txt");
-
-fn part1(name: []const u8, in: []const u8) !void {
+fn part1(name: []const u8) !void {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const input = try std.fs.cwd().readFileAlloc(allocator, name, std.math.maxInt(usize));
     var timer = try std.time.Timer.start();
+
     var total: u32 = 0;
     var first: u8 = 0;
     var firstFound: bool = false;
     var last: u8 = 0;
-    for (in) |char| {
+    for (input) |char| {
         if (char >= '0' and char <= '9') {
             if (!firstFound) {
                 firstFound = true;
@@ -24,15 +25,20 @@ fn part1(name: []const u8, in: []const u8) !void {
         }
     }
     total += first * 10 + last;
-    std.debug.print("Part 1 {s} {d} {d}\n", .{ name, total, std.fmt.fmtDuration(timer.read()) });
+
+    std.debug.print("Part 1 {s} {d} {d}\n", .{ std.fs.path.basename(name), total, std.fmt.fmtDuration(timer.read()) });
 }
 
-fn part2(name: []const u8, in: []const u8) !void {
+fn part2(name: []const u8) !void {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const input = try std.fs.cwd().readFileAlloc(allocator, name, std.math.maxInt(usize));
     var timer = try std.time.Timer.start();
 
     const words = [_][]const u8{ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
 
-    var lines = std.mem.splitSequence(u8, in, "\n");
+    var lines = std.mem.splitSequence(u8, input, "\n");
     var total: usize = 0;
     while (lines.next()) |line| {
         var first: usize = 0;
@@ -53,12 +59,13 @@ fn part2(name: []const u8, in: []const u8) !void {
         }
         total += first * 10 + last;
     }
-    std.debug.print("Part 2 {s} {d} {d}\n", .{ name, total, std.fmt.fmtDuration(timer.read()) });
+
+    std.debug.print("Part 2 {s} {d} {d}\n", .{ std.fs.path.basename(name), total, std.fmt.fmtDuration(timer.read()) });
 }
 
 pub fn main() !void {
-    try part1("example", example);
-    try part1("input", input);
-    try part2("example2", example2);
-    try part2("input", input);
+    try part1("2023/01/example.txt");
+    try part1("2023/01/input.txt");
+    try part2("2023/01/example2.txt");
+    try part2("2023/01/input.txt");
 }

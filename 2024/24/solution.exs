@@ -157,6 +157,6 @@ defmodule Day24 do
   end
 end
 
-Day24.run(1, "example")
-Day24.run(1, "input")
-Day24.run(2, "input")
+Day24.run(1, "example.txt")
+Day24.run(1, "input.txt")
+Day24.run(2, "input.txt")

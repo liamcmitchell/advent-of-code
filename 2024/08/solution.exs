@@ -92,5 +92,5 @@ defmodule Day8 do
   end
 end
 
-Day8.part1("example") |> IO.inspect(label: "part1")
-Day8.part2("example") |> IO.inspect(label: "part2")
+Day8.part1("example.txt") |> IO.inspect(label: "part1")
+Day8.part2("example.txt") |> IO.inspect(label: "part2")

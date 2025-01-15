@@ -88,7 +88,7 @@ defmodule Day17 do
   end
 end
 
-Day17.part1("example") |> IO.inspect(label: "part1 example")
-Day17.part1("input") |> IO.inspect(label: "part1 input")
-Day17.part2("example2") |> IO.inspect(label: "part2 example2")
-Day17.part2("input") |> IO.inspect(label: "part2 input")
+Day17.part1("example.txt") |> IO.inspect(label: "part1 example")
+Day17.part1("input.txt") |> IO.inspect(label: "part1 input")
+Day17.part2("example2.txt") |> IO.inspect(label: "part2 example2")
+Day17.part2("input.txt") |> IO.inspect(label: "part2 input")

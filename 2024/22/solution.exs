@@ -79,7 +79,7 @@ defmodule Day22 do
   end
 end
 
-Day22.run(1, "example")
-Day22.run(1, "input")
-Day22.run(2, "example2")
-Day22.run(2, "input")
+Day22.run(1, "example.txt")
+Day22.run(1, "input.txt")
+Day22.run(2, "example2.txt")
+Day22.run(2, "input.txt")

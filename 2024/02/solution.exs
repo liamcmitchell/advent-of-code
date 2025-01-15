@@ -1,5 +1,5 @@
 reports =
-  "2024/02/input"
+  "2024/02/input.txt"
   |> File.read!()
   |> String.split("\n")
   |> Enum.map(fn line ->

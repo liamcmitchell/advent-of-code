@@ -48,6 +48,6 @@ defmodule Day25 do
   end
 end
 
-Day25.run(1, "example")
-Day25.run(1, "input")
+Day25.run(1, "example.txt")
+Day25.run(1, "input.txt")
 # Woooooooo!

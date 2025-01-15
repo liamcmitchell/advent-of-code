@@ -1,4 +1,4 @@
-input = File.read!("2024/04/input")
+input = File.read!("2024/04/input.txt")
 
 # Part 1
 horizontal = String.split(input, "\n")

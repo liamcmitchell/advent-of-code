@@ -80,7 +80,7 @@ defmodule Day19 do
   end
 end
 
-Day19.run(1, "example")
-Day19.run(1, "input")
-Day19.run(2, "example")
-Day19.run(2, "input")
+Day19.run(1, "example.txt")
+Day19.run(1, "input.txt")
+Day19.run(2, "example.txt")
+Day19.run(2, "input.txt")

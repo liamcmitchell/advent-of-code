@@ -1,5 +1,5 @@
 sorted_lists =
-  "2024/01/location-lists"
+  "2024/01/input.txt"
   |> File.read!()
   |> String.split()
   |> Enum.map(&String.to_integer/1)
