@@ -56,50 +56,42 @@ fn part2(name: []const u8) !void {
     var timer = try std.time.Timer.start();
 
     var total: i32 = 0;
+    var prevNums: [22]i32 = undefined;
+    var currNums: [22]i32 = undefined;
 
     var lineIt = std.mem.tokenizeScalar(u8, input, '\n');
     while (lineIt.next()) |line| {
-        var lastNums = std.ArrayList(i32).init(allocator);
-        var currentNums = std.ArrayList(i32).init(allocator);
-
+        @memset(&prevNums, 0);
+        @memset(&currNums, 0);
+        var len: u8 = 0;
         var numberIt = std.mem.tokenizeScalar(u8, line, ' ');
         while (numberIt.next()) |number| {
-
             // swap last and current
-            const tmp = lastNums;
-            lastNums = currentNums;
-            currentNums = tmp;
+            const tmp = prevNums;
+            prevNums = currNums;
+            currNums = tmp;
 
             var current = try std.fmt.parseInt(i32, number, 10);
-            for (0..lastNums.items.len + 1) |i| {
-                if (currentNums.items.len <= i) {
-                    try currentNums.append(current);
-                } else {
-                    currentNums.items[i] = current;
-                }
-                var last: i32 = 0;
-                if (lastNums.items.len > i) {
-                    last = lastNums.items[i];
-                }
-
-                current = current - last;
+            for (0..len + 1) |i| {
+                currNums[i] = current;
+                current = current - prevNums[i];
             }
+            len += 1;
         }
 
         // Go backwards
-        const len = lastNums.items.len;
-        for (0..len + 1) |_| {
-            for (0..len - 1) |i| {
-                lastNums.items[i] = currentNums.items[i] - currentNums.items[i + 1];
+        for (0..len) |i| {
+            for (0..len - i) |j| {
+                prevNums[j] = currNums[j] - currNums[j + 1];
             }
 
             // swap last and current
-            const tmp = lastNums;
-            lastNums = currentNums;
-            currentNums = tmp;
+            const tmp = prevNums;
+            prevNums = currNums;
+            currNums = tmp;
         }
 
-        total += currentNums.items[0];
+        total += currNums[0];
     }
 
     std.debug.print("Part 1 {s} {d} {d}\n", .{ std.fs.path.basename(name), total, std.fmt.fmtDuration(timer.read()) });
