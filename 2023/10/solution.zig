@@ -1,57 +1,70 @@
 const std = @import("std");
 
-fn part1(name: []const u8) !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
-    const input = try std.fs.cwd().readFileAlloc(allocator, name, std.math.maxInt(usize));
-    var timer = try std.time.Timer.start();
+const Directions = struct {
+    up: isize,
+    right: isize = 1,
+    down: isize,
+    left: isize = -1,
+    index: u8 = 0,
 
-    const width = @as(isize, @intCast(std.mem.indexOfScalar(u8, input, '\n').?)) + 1;
+    pub fn init(width: isize) Directions {
+        return Directions{
+            .up = -width,
+            .down = width,
+        };
+    }
+
+    pub fn get(self: Directions, index: usize) isize {
+        return switch (index % 4) {
+            0 => self.up,
+            1 => self.right,
+            2 => self.down,
+            else => self.left,
+        };
+    }
+};
+
+fn followLoop(allocator: std.mem.Allocator, input: []const u8, directions: Directions) !std.ArrayList(usize) {
     const start = @as(isize, @intCast(std.mem.indexOfScalar(u8, input, 'S').?));
-    const up: isize = -width;
-    const right: isize = 1;
-    const down: isize = width;
-    const left: isize = -1;
     var prev = start;
     var current: isize = 0;
-    var loopLen: usize = 1;
-    directions: for ([_]isize{ up, right, down, left }) |direction| {
-        current = prev + direction;
+    var loop = try std.ArrayList(usize).initCapacity(allocator, input.len);
+    try loop.append(@intCast(start));
+
+    directions: for (0..4) |index| {
+        current = prev + directions.get(index);
         if (current < 0 or current >= input.len) {
-            continue;
+            continue :directions;
         }
         while (current != start) {
             var a: isize = 0;
             var b: isize = 0;
             switch (input[@intCast(current)]) {
                 '|' => {
-                    a = up;
-                    b = down;
+                    a = directions.up;
+                    b = directions.down;
                 },
                 '-' => {
-                    a = left;
-                    b = right;
+                    a = directions.left;
+                    b = directions.right;
                 },
                 'L' => {
-                    a = up;
-                    b = right;
+                    a = directions.up;
+                    b = directions.right;
                 },
                 'J' => {
-                    a = up;
-                    b = left;
+                    a = directions.up;
+                    b = directions.left;
                 },
                 '7' => {
-                    a = left;
-                    b = down;
+                    a = directions.left;
+                    b = directions.down;
                 },
                 'F' => {
-                    a = down;
-                    b = right;
+                    a = directions.down;
+                    b = directions.right;
                 },
-                else => {
-                    continue :directions;
-                },
+                else => {},
             }
             if (prev == current + a) {
                 prev = current;
@@ -60,13 +73,27 @@ fn part1(name: []const u8) !void {
                 prev = current;
                 current = current + a;
             } else {
-                @panic("no link to prev");
+                // No link to prev, we started with the wrong direction.
+                continue :directions;
             }
-            loopLen += 1;
+            try loop.append(@intCast(prev));
         }
         break;
     }
-    const total = loopLen / 2;
+    return loop;
+}
+
+fn part1(name: []const u8) !void {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const input = try std.fs.cwd().readFileAlloc(allocator, name, std.math.maxInt(usize));
+    var timer = try std.time.Timer.start();
+
+    const width = @as(isize, @intCast(std.mem.indexOfScalar(u8, input, '\n').?)) + 1;
+    const directions = Directions.init(width);
+    const loop = try followLoop(allocator, input, directions);
+    const total = loop.items.len / 2;
 
     std.debug.print("Part 1 {s} {d} {d}\n", .{ std.fs.path.basename(name), total, std.fmt.fmtDuration(timer.read()) });
 }
@@ -79,194 +106,83 @@ fn part2(name: []const u8) !void {
     var timer = try std.time.Timer.start();
 
     const width = @as(isize, @intCast(std.mem.indexOfScalar(u8, input, '\n').?)) + 1;
-    const start = @as(isize, @intCast(std.mem.indexOfScalar(u8, input, 'S').?));
+    const directions = Directions.init(width);
+    const loop = try followLoop(allocator, input, directions);
     var inLoop = try allocator.alloc(bool, input.len);
-    inLoop[@intCast(start)] = true;
-    const up: isize = -width;
-    const right: isize = 1;
-    const down: isize = width;
-    const left: isize = -1;
-    const directions = [_]isize{ up, right, down, left };
-    var prev = start;
-    var current: isize = 0;
-    var loopLen: usize = 1;
-    directions: for (directions) |startDirection| {
-        current = prev + startDirection;
-        if (current < 0 or current >= input.len) {
-            continue;
-        }
-        while (current != start) {
-            var a: isize = 0;
-            var b: isize = 0;
-            switch (input[@intCast(current)]) {
-                '|' => {
-                    a = up;
-                    b = down;
-                },
-                '-' => {
-                    a = left;
-                    b = right;
-                },
-                'L' => {
-                    a = up;
-                    b = right;
-                },
-                'J' => {
-                    a = up;
-                    b = left;
-                },
-                '7' => {
-                    a = left;
-                    b = down;
-                },
-                'F' => {
-                    a = down;
-                    b = right;
-                },
-                else => {
-                    continue :directions;
-                },
-            }
-            if (prev == current + a) {
-                a = b;
-            } else if (prev != current + b) {
-                continue :directions;
-            }
-            prev = current;
-            current = current + a;
-            inLoop[@intCast(prev)] = true;
-            loopLen += 1;
-        }
-        break;
+    for (loop.items) |pipe| {
+        inLoop[pipe] = true;
     }
 
     // Loop a second time to collect nodes to the left and right of loop.
+    // One of the sides will be inside.
     var leftOfLoop = try allocator.alloc(bool, input.len);
     var leftOfLoopCount: usize = 0;
     var leftIsOutside = false;
     var rightOfLoop = try allocator.alloc(bool, input.len);
     var rightOfLoopCount: usize = 0;
     var rightIsOutside = false;
-    prev = start;
-    current = 0;
-    directions: for (directions) |startDirection| {
-        current = prev + startDirection;
-        if (current < 0 or current >= input.len) {
-            continue;
-        }
-        while (current != start) {
-            var a: isize = 0;
-            var b: isize = 0;
-            switch (input[@intCast(current)]) {
-                '|' => {
-                    a = up;
-                    b = down;
-                },
-                '-' => {
-                    a = left;
-                    b = right;
-                },
-                'L' => {
-                    a = up;
-                    b = right;
-                },
-                'J' => {
-                    a = up;
-                    b = left;
-                },
-                '7' => {
-                    a = left;
-                    b = down;
-                },
-                'F' => {
-                    a = down;
-                    b = right;
-                },
-                else => {},
-            }
-            var nextDirection: isize = 0;
-            var prevDirection: isize = 0;
-            if (prev == current + a) {
-                nextDirection = b;
-                prevDirection = a;
-            } else if (prev == current + b) {
-                nextDirection = a;
-                prevDirection = b;
-            } else {
-                continue :directions;
-            }
-            // Iterate over directions (clockwise), from prev to next.
-            var foundPrev = false;
-            var foundNext = false;
-            var lookingLeft = false;
-            forClockwise: for (0..12) |i| {
-                const d = directions[i % directions.len];
-                if (d == prevDirection) {
-                    if (foundPrev) break :forClockwise;
-                    foundPrev = true;
-                    lookingLeft = true;
-                } else if (d == nextDirection) {
-                    if (foundNext) break :forClockwise;
-                    foundNext = true;
-                    lookingLeft = false;
-                } else if (foundPrev and lookingLeft) {
-
-                    // Go left until hitting edge, loop or already counted nodes.
-                    var leftOfCurrent = current + d;
-                    whileLookingLeft: while (true) {
-                        if (leftOfCurrent < 0 or leftOfCurrent >= input.len) {
-                            leftIsOutside = true;
-                            break :whileLookingLeft;
-                        }
-                        if (input[@intCast(leftOfCurrent)] == '\n') {
-                            leftIsOutside = true;
-                            break :whileLookingLeft;
-                        }
-                        if (inLoop[@intCast(leftOfCurrent)] == true) {
-                            break :whileLookingLeft;
-                        }
-                        if (!leftOfLoop[@intCast(leftOfCurrent)]) {
-                            leftOfLoopCount += 1;
-                            leftOfLoop[@intCast(leftOfCurrent)] = true;
-                        }
-                        leftOfCurrent = leftOfCurrent + d;
+    var prev: isize = 0;
+    var current: isize = @intCast(loop.items[loop.items.len - 2]);
+    var next: isize = @intCast(loop.items[loop.items.len - 1]);
+    for (loop.items) |_next| {
+        prev = current;
+        current = next;
+        next = @intCast(_next);
+        const prevDirection = prev - current;
+        const nextDirection = next - current;
+        var foundPrev = false;
+        var foundNext = false;
+        var lookingLeft = false;
+        // Iterate over directions (clockwise), from prev to next.
+        forClockwise: for (0..8) |i| {
+            const direction = directions.get(i);
+            if (direction == prevDirection) {
+                if (foundPrev) break :forClockwise;
+                foundPrev = true;
+                lookingLeft = true;
+            } else if (direction == nextDirection) {
+                if (foundNext) break :forClockwise;
+                foundNext = true;
+                lookingLeft = false;
+            } else if (foundPrev and lookingLeft and !leftIsOutside) {
+                // Go left until hitting edge, loop or already counted nodes.
+                var leftOfCurrent = current + direction;
+                whileLookingLeft: while (true) {
+                    if (leftOfCurrent < 0 or leftOfCurrent >= input.len or input[@intCast(leftOfCurrent)] == '\n') {
+                        leftIsOutside = true;
+                        break :whileLookingLeft;
                     }
-                } else if (foundNext and !lookingLeft) {
-                    // Go right until hitting edge, loop or already counted nodes.
-                    var rightOfCurrent = current + d;
-                    whileLookingRight: while (true) {
-                        if (rightOfCurrent < 0 or rightOfCurrent >= input.len) {
-                            rightIsOutside = true;
-                            break :whileLookingRight;
-                        }
-                        if (input[@intCast(rightOfCurrent)] == '\n') {
-                            rightIsOutside = true;
-                            break :whileLookingRight;
-                        }
-                        if (inLoop[@intCast(rightOfCurrent)] == true) {
-                            break :whileLookingRight;
-                        }
-                        if (!rightOfLoop[@intCast(rightOfCurrent)]) {
-                            rightOfLoopCount += 1;
-                            rightOfLoop[@intCast(rightOfCurrent)] = true;
-                        }
-                        rightOfCurrent = rightOfCurrent + d;
+                    if (inLoop[@intCast(leftOfCurrent)] == true) {
+                        break :whileLookingLeft;
                     }
+                    if (!leftOfLoop[@intCast(leftOfCurrent)]) {
+                        leftOfLoopCount += 1;
+                        leftOfLoop[@intCast(leftOfCurrent)] = true;
+                    }
+                    leftOfCurrent = leftOfCurrent + direction;
+                }
+            } else if (foundNext and !lookingLeft and !rightIsOutside) {
+                // Go right until hitting edge, loop or already counted nodes.
+                var rightOfCurrent = current + direction;
+                whileLookingRight: while (true) {
+                    if (rightOfCurrent < 0 or rightOfCurrent >= input.len or input[@intCast(rightOfCurrent)] == '\n') {
+                        rightIsOutside = true;
+                        break :whileLookingRight;
+                    }
+                    if (inLoop[@intCast(rightOfCurrent)] == true) {
+                        break :whileLookingRight;
+                    }
+                    if (!rightOfLoop[@intCast(rightOfCurrent)]) {
+                        rightOfLoopCount += 1;
+                        rightOfLoop[@intCast(rightOfCurrent)] = true;
+                    }
+                    rightOfCurrent = rightOfCurrent + direction;
                 }
             }
-
-            prev = current;
-            current = current + nextDirection;
         }
-        break;
     }
 
-    var total: usize = 0;
-    if (leftIsOutside) {
-        total = rightOfLoopCount;
-    } else {
-        total = leftOfLoopCount;
-    }
+    const total = if (leftIsOutside) rightOfLoopCount else leftOfLoopCount;
 
     std.debug.print("Part 2 {s} {d} {d}\n", .{ std.fs.path.basename(name), total, std.fmt.fmtDuration(timer.read()) });
 }
