@@ -1,67 +1,38 @@
 const std = @import("std");
 
-fn arrangements(cache: *std.AutoHashMap(usize, usize), record: []const u8, groups: []usize, last: u8, expectingDamaged: usize, remainingDamaged: usize, remainingKnownDamaged: usize) !usize {
+fn arrangements(cache: *std.AutoHashMap(usize, usize), record: []const u8, groups: []usize, last: u8, expectingDamaged: usize) !usize {
+    if (record.len == 0) {
+        if (groups.len == 0 and expectingDamaged == 0) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
     const lastKey: usize = if (last == '#') 1 else 0;
-    const key = (record.len) + (groups.len * 100) + (lastKey * 10000) + (expectingDamaged * 100000);
+    const key = (record.len) + (groups.len << 8) + (lastKey << 16) + (expectingDamaged << 32);
 
     if (!cache.contains(key)) {
         const result = result: {
-            if (record.len < (remainingDamaged + @max(groups.len, 1) - 1)) {
-                // Arrangement not possible.
-                // std.debug.print("not possible {s} {d} {d} {d}\n", .{ record, expectingDamaged, remainingDamaged, groups.len });
-                break :result 0;
-            } else if (record.len == 0) {
-                break :result 1;
+            const spring = record[0];
+
+            var damaged: usize = 0;
+            if (spring != '.') {
+                if (expectingDamaged > 0) {
+                    // Continue damaged group.
+                    damaged = try arrangements(cache, record[1..], groups, '#', expectingDamaged - 1);
+                } else if (groups.len > 0 and last != '#') {
+                    // Start new group.
+                    damaged = try arrangements(cache, record[1..], groups[1..], '#', groups[0] - 1);
+                }
             }
 
-            switch (record[0]) {
-                '#' => {
-                    if (expectingDamaged == 0 and last == '#') {
-                        // We can't start a new group immediately after the last.
-                        break :result 0;
-                    }
-
-                    if (expectingDamaged > 0) {
-                        break :result try arrangements(cache, record[1..], groups, '#', expectingDamaged - 1, remainingDamaged - 1, remainingKnownDamaged - 1);
-                    }
-
-                    // Starting a new group.
-                    break :result try arrangements(cache, record[1..], groups[1..], '#', groups[0] - 1, remainingDamaged - 1, remainingKnownDamaged - 1);
-                },
-                '.' => {
-                    if (expectingDamaged > 0) {
-                        break :result 0;
-                    }
-
-                    break :result try arrangements(cache, record[1..], groups, '.', expectingDamaged, remainingDamaged, remainingKnownDamaged);
-                },
-                '?' => {
-                    if (expectingDamaged > 0) {
-                        if (remainingDamaged == remainingKnownDamaged) {
-                            // Can't mark any more as damaged.
-                            break :result 0;
-                        }
-
-                        break :result try arrangements(cache, record[1..], groups, '#', expectingDamaged - 1, remainingDamaged - 1, remainingKnownDamaged);
-                    }
-
-                    if (last == '#' or remainingDamaged == remainingKnownDamaged) {
-                        // This should not be damaged.
-                        break :result try arrangements(cache, record[1..], groups, '.', expectingDamaged, remainingDamaged, remainingKnownDamaged);
-                    }
-
-                    if (record.len == (remainingDamaged + @max(groups.len, 1) - 1)) {
-                        // We don't have a choice, the remaining must be damaged.
-                        break :result try arrangements(cache, record[1..], groups[1..], '#', groups[0] - 1, remainingDamaged - 1, remainingKnownDamaged);
-                    }
-
-                    // Could be damaged or not.
-                    const asDamaged = try arrangements(cache, record[1..], groups[1..], '#', groups[0] - 1, remainingDamaged - 1, remainingKnownDamaged);
-                    const asUndamaged = try arrangements(cache, record[1..], groups, '.', expectingDamaged, remainingDamaged, remainingKnownDamaged);
-                    break :result asDamaged + asUndamaged;
-                },
-                else => unreachable,
+            var undamaged: usize = 0;
+            if (spring != '#' and expectingDamaged == 0) {
+                undamaged = try arrangements(cache, record[1..], groups, '.', 0);
             }
+
+            break :result damaged + undamaged;
         };
 
         try cache.put(key, result);
@@ -93,12 +64,7 @@ fn part1(name: []const u8) !void {
             try groups.append(groupSize);
         }
 
-        var damagedCount: usize = 0;
-        for (groups.items) |groupSize| damagedCount += groupSize;
-
-        const knownDamagedCount = std.mem.count(u8, record, "#");
-
-        total += try arrangements(&cache, record, groups.items, '.', 0, damagedCount, knownDamagedCount);
+        total += try arrangements(&cache, record, groups.items, '.', 0);
     }
 
     std.debug.print("Part 1 {s} {d} {d}\n", .{ std.fs.path.basename(name), total, std.fmt.fmtDuration(timer.read()) });
@@ -132,11 +98,6 @@ fn part2(name: []const u8) !void {
         }
         const groupsCount = groups.items.len;
 
-        var damagedCount: usize = 0;
-        for (groups.items) |groupSize| damagedCount += groupSize;
-
-        const knownDamagedCount = std.mem.count(u8, record.items, "#");
-
         const folds = 5;
 
         for (1..folds) |_| {
@@ -145,7 +106,7 @@ fn part2(name: []const u8) !void {
             try groups.appendSlice(groups.items[0..groupsCount]);
         }
 
-        total += try arrangements(&cache, record.items, groups.items, '.', 0, damagedCount * folds, knownDamagedCount * folds);
+        total += try arrangements(&cache, record.items, groups.items, '.', 0);
     }
 
     std.debug.print("Part 2 {s} {d} {d}\n", .{ std.fs.path.basename(name), total, std.fmt.fmtDuration(timer.read()) });
