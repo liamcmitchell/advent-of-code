@@ -11,6 +11,8 @@ elixir 2024/01/solution.exs
 go run 2023/01/solution.go
 # Zig
 zig run 2023/01/solution.zig
+# C
+gcc -o solution 2022/01/solution.c && ./solution
 ```
 
 I use [fswatch](https://github.com/emcrisostomo/fswatch?tab=readme-ov-file#readme) for a simple save-execute workflow:
