@@ -28,7 +28,7 @@ void part1(const char *name)
     }
   }
 
-  printf("Part 1 %s %d %.0lfms\n", name, result, difftime(start, time(NULL)) / 1000);
+  printf("Part 1 %s %d %.0lfms\n", name, result, difftime(time(NULL), start) / 1000);
 }
 
 int desc(const void *a, const void *b)
@@ -66,7 +66,7 @@ void part2(const char *name)
   qsort(totals, count, sizeof(totals[0]), desc);
   int result = totals[0] + totals[1] + totals[2];
 
-  printf("Part 2 %s %d %.0lfms\n", name, result, difftime(start, time(NULL)) / 1000);
+  printf("Part 2 %s %d %.0lfms\n", name, result, difftime(time(NULL), start) / 1000);
 }
 
 int main(void)
