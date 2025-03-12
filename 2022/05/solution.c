@@ -116,7 +116,7 @@ void part2(const char* name) {
     result[i] = crates[i][counts[i] - 1];
   }
 
-  printf("Part 1 %s %s %.0lfms\n", name, result,
+  printf("Part 2 %s %s %.0lfms\n", name, result,
          difftime(time(NULL), start) / 1000);
 }
 
