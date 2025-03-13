@@ -7,7 +7,7 @@
 
 void part1(const char* name) {
   FILE* file = fopen(name, "r");
-  time_t start = time(NULL);
+  clock_t start = clock();
 
   int stacks;
   int counts[10] = {0};
@@ -59,13 +59,13 @@ void part1(const char* name) {
     result[i] = crates[i][counts[i] - 1];
   }
 
-  printf("Part 1 %s %s %.0lfms\n", name, result,
-         difftime(time(NULL), start) / 1000);
+  printf("Part 1 %s %s %lums\n", name, result,
+         (clock() - start) / (CLOCKS_PER_SEC / 1000));
 }
 
 void part2(const char* name) {
   FILE* file = fopen(name, "r");
-  time_t start = time(NULL);
+  clock_t start = clock();
 
   int stacks;
   int counts[10] = {0};
@@ -116,8 +116,8 @@ void part2(const char* name) {
     result[i] = crates[i][counts[i] - 1];
   }
 
-  printf("Part 2 %s %s %.0lfms\n", name, result,
-         difftime(time(NULL), start) / 1000);
+  printf("Part 2 %s %s %lums\n", name, result,
+         (clock() - start) / (CLOCKS_PER_SEC / 1000));
 }
 
 int main(void) {

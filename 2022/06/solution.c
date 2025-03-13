@@ -7,7 +7,7 @@
 
 void part1(const char* name) {
   FILE* file = fopen(name, "r");
-  time_t start = time(NULL);
+  clock_t start = clock();
 
   int result = 0;
   char buffer[5000] = {'\0'};
@@ -29,13 +29,13 @@ void part1(const char* name) {
     continue;
   }
 
-  printf("Part 1 %s %d %.0lfms\n", name, result,
-         difftime(time(NULL), start) / 1000);
+  printf("Part 1 %s %d %lums\n", name, result,
+         (clock() - start) / (CLOCKS_PER_SEC / 1000));
 }
 
 void part2(const char* name) {
   FILE* file = fopen(name, "r");
-  time_t start = time(NULL);
+  clock_t start = clock();
 
   int result = 0;
   char buffer[5000] = {'\0'};
@@ -57,8 +57,8 @@ void part2(const char* name) {
     continue;
   }
 
-    printf("Part 2 %s %d %.0lfms\n", name, result,
-         difftime(time(NULL), start) / 1000);
+  printf("Part 2 %s %d %lums\n", name, result,
+         (clock() - start) / (CLOCKS_PER_SEC / 1000));
 }
 
 int main(void) {

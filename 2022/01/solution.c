@@ -4,7 +4,7 @@
 
 void part1(const char* name) {
   FILE* file = fopen(name, "r");
-  time_t start = time(NULL);
+  clock_t start = clock();
   char line[100];
   int result = 0;
   int current = 0;
@@ -23,8 +23,8 @@ void part1(const char* name) {
     }
   }
 
-  printf("Part 1 %s %d %.0lfms\n", name, result,
-         difftime(time(NULL), start) / 1000);
+  printf("Part 1 %s %d %lums\n", name, result,
+         (clock() - start) / (CLOCKS_PER_SEC / 1000));
 }
 
 int desc(const void* a, const void* b) {
@@ -33,7 +33,7 @@ int desc(const void* a, const void* b) {
 
 void part2(const char* name) {
   FILE* file = fopen(name, "r");
-  time_t start = time(NULL);
+  clock_t start = clock();
   char line[100];
   int totals[300];
   int count = 0;
@@ -56,8 +56,8 @@ void part2(const char* name) {
   qsort(totals, count, sizeof(totals[0]), desc);
   int result = totals[0] + totals[1] + totals[2];
 
-  printf("Part 2 %s %d %.0lfms\n", name, result,
-         difftime(time(NULL), start) / 1000);
+  printf("Part 2 %s %d %lums\n", name, result,
+         (clock() - start) / (CLOCKS_PER_SEC / 1000));
 }
 
 int main(void) {
