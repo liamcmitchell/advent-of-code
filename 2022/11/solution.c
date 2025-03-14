@@ -5,6 +5,8 @@
 #include <string.h>
 #include <time.h>
 
+typedef unsigned long int u32;
+
 struct monkey {
   char op;
   int operand;
@@ -12,7 +14,7 @@ struct monkey {
   int true;
   int false;
   int itemcount;
-  unsigned long int items[100];
+  u32 items[100];
 };
 
 int desc(const void* a, const void* b) {
@@ -142,12 +144,12 @@ void part2(const char* name) {
     lcm = lcm * (monkeys[m].test / gcd(lcm, monkeys[m].test));
   }
 
-  unsigned long int inspectcount[8] = {0};
+  u32 inspectcount[8] = {0};
   for (int r = 0; r < 10000; r++) {
     for (int m = 0; m < monkeycount; m++) {
       struct monkey* monkey = &monkeys[m];
       for (int i = 0; i < monkey->itemcount; i++) {
-        unsigned long int worry = monkey->items[i];
+        u32 worry = monkey->items[i];
         if (monkey->op == '2') {
           worry = worry * worry;
         } else if (monkey->op == '*') {
@@ -172,7 +174,7 @@ void part2(const char* name) {
 
   qsort(inspectcount, monkeycount, sizeof(inspectcount[0]), desc);
 
-  unsigned long int result = inspectcount[0] * inspectcount[1];
+  u32 result = inspectcount[0] * inspectcount[1];
 
   printf("Part 2 %s %lu %lums\n", name, result,
          (clock() - start) / (CLOCKS_PER_SEC / 1000));
