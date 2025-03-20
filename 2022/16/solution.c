@@ -11,7 +11,6 @@
 typedef unsigned char u8;
 typedef unsigned short int u16;
 typedef unsigned long int u32;
-typedef unsigned long long int u64;
 
 struct valve {
   char name[3];
@@ -111,16 +110,17 @@ void parse(FILE* file, struct valves* valves) {
     valves->items[t] = valve;
   }
   valves->clen = h;
+  assert(h <= 32);
 }
 
-u16 release(u8 current, u8 minutes, u64 open, struct valves* valves) {
+u16 release(u8 current, u8 minutes, u32 open, struct valves* valves) {
   u16 bestscore = 0;
 
   if (minutes <= 2)
     return bestscore;
 
   for (u8 i = 0; i < valves->clen; i++) {
-    u64 mask = 1 << i;
+    u32 mask = 1 << i;
     u8 distance = valves->items[current].distances[i];
     if (open & mask || valves->items[i].flowrate == 0 ||
         distance + 1 >= minutes)
@@ -148,7 +148,7 @@ void part1(const char* name) {
          (clock() - start) / (CLOCKS_PER_SEC / 1000));
 }
 
-u16 release2(u8 ai, u8 am, u8 bi, u8 bm, u64 open, struct valves* valves) {
+u16 release2(u8 ai, u8 am, u8 bi, u8 bm, u32 open, struct valves* valves) {
   if (am <= 2 && bm <= 2)
     return 0;
 
@@ -166,7 +166,7 @@ u16 release2(u8 ai, u8 am, u8 bi, u8 bm, u64 open, struct valves* valves) {
   u16 bestscore = 0;
 
   for (u8 i = 0; i < valves->clen; i++) {
-    u64 mask = 1 << i;
+    u32 mask = 1 << i;
     u8 distance = valves->items[currenti].distances[i];
     if (open & mask || valves->items[i].flowrate == 0 ||
         distance + 1 >= currentm)
