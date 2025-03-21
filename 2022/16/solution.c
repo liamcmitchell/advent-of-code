@@ -183,6 +183,11 @@ void part2(const char* name) {
   u16 result = 0;
   u16 max = 1 << valves.clen;
   for (u16 i = 0; i < max - 1; i++) {
+    // Assuming pressure released will be roughly equal,
+    // skip scores unlikely to produce a better result.
+    if (scores[i] < result / 3)
+      continue;
+
     for (u16 j = i + 1; j < max; j++) {
       if ((i & j) == 0 && scores[i] + scores[j] > result) {
         result = scores[i] + scores[j];
