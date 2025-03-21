@@ -110,17 +110,17 @@ void parse(FILE* file, struct valves* valves) {
     valves->items[t] = valve;
   }
   valves->clen = h;
-  assert(h <= 32);
+  assert(h <= 16);
 }
 
-u16 release(u8 current, u8 minutes, u32 open, struct valves* valves) {
+u16 release(u8 current, u8 minutes, u16 open, struct valves* valves) {
   u16 bestscore = 0;
 
   if (minutes <= 2)
     return bestscore;
 
   for (u8 i = 0; i < valves->clen; i++) {
-    u32 mask = 1 << i;
+    u16 mask = 1 << i;
     u8 distance = valves->items[current].distances[i];
     if (open & mask || valves->items[i].flowrate == 0 ||
         distance + 1 >= minutes)
@@ -148,38 +148,28 @@ void part1(const char* name) {
          (clock() - start) / (CLOCKS_PER_SEC / 1000));
 }
 
-u16 release2(u8 ai, u8 am, u8 bi, u8 bm, u32 open, struct valves* valves) {
-  if (am <= 2 && bm <= 2)
-    return 0;
+void release2(u8 current,
+              u8 minutes,
+              u16 open,
+              u16 score,
+              struct valves* valves,
+              u16* scores) {
+  if (minutes <= 2)
+    return;
 
-  u8 currenti = ai;
-  u8 currentm = am;
-  u8 otheri = bi;
-  u8 otherm = bm;
-  if (currentm < otherm) {
-    currenti = bi;
-    currentm = bm;
-    otheri = ai;
-    otherm = am;
+  if (scores[open] < score) {
+    scores[open] = score;
   }
-
-  u16 bestscore = 0;
 
   for (u8 i = 0; i < valves->clen; i++) {
-    u32 mask = 1 << i;
-    u8 distance = valves->items[currenti].distances[i];
-    if (open & mask || valves->items[i].flowrate == 0 ||
-        distance + 1 >= currentm)
+    u16 mask = 1 << i;
+    u8 distance = valves->items[current].distances[i];
+    if (open & mask || distance + 1 >= minutes)
       continue;
-    u16 nextm = currentm - distance - 1;
-    u16 score = valves->items[i].flowrate * nextm +
-                release2(i, nextm, otheri, otherm, open | mask, valves);
-    if (score > bestscore) {
-      bestscore = score;
-    }
+    u16 nextminutes = minutes - distance - 1;
+    u16 nextscore = score + valves->items[i].flowrate * nextminutes;
+    release2(i, nextminutes, open | mask, nextscore, valves, scores);
   }
-
-  return bestscore;
 }
 
 void part2(const char* name) {
@@ -188,8 +178,17 @@ void part2(const char* name) {
 
   struct valves valves;
   parse(file, &valves);
-  u8 starti = valvei("AA", &valves);
-  u16 result = release2(starti, 26, starti, 26, 0, &valves);
+  u16 scores[66000] = {0};
+  release2(valvei("AA", &valves), 26, 0, 0, &valves, scores);
+  u16 result = 0;
+  u16 max = 1 << valves.clen;
+  for (u16 i = 0; i < max - 1; i++) {
+    for (u16 j = i + 1; j < max; j++) {
+      if ((i & j) == 0 && scores[i] + scores[j] > result) {
+        result = scores[i] + scores[j];
+      }
+    }
+  }
 
   printf("Part 2 %s %d %lums\n", name, result,
          (clock() - start) / (CLOCKS_PER_SEC / 1000));
