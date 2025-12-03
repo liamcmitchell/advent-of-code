@@ -23,7 +23,6 @@ local function part2(name)
 		else
 			zeroes = math.ceil(dial / 100) - math.ceil(after / 100)
 		end
-		-- print(dial .. " " .. line .. " " .. after .. " " .. zeroes)
 		count = count + zeroes
 		dial = after % 100
 	end
