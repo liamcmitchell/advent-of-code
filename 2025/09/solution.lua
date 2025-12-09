@@ -15,6 +15,25 @@ local function part1(name)
 	print("Part 1 " .. name .. " " .. count)
 end
 
+local smallest = function(a, b)
+	return a[1] < b[1]
+end
+
+local checkstart = function(lines, min)
+	local l = 1
+	local r = #lines
+	local m = 0
+	while l < r do
+		m = l + math.floor((r - l) / 2)
+		if lines[m][1] < min then
+			l = m + 1
+		else
+			r = m
+		end
+	end
+	return l
+end
+
 local function part2(name)
 	local start = os.clock()
 	local tiles = {}
@@ -32,17 +51,13 @@ local function part2(name)
 		local miny = math.min(tile[2], nexttile[2])
 		local maxy = math.max(tile[2], nexttile[2])
 		if minx == maxx then
-			table.insert(vertical, { minx, miny, maxx, maxy })
+			table.insert(vertical, { minx, miny, maxy })
 		else
-			table.insert(horizontal, { minx, miny, maxx, maxy })
+			table.insert(horizontal, { miny, minx, maxx })
 		end
 	end
-	table.sort(vertical, function(a, b)
-		return a[1] < b[1]
-	end)
-	table.sort(horizontal, function(a, b)
-		return a[2] < b[2]
-	end)
+	table.sort(horizontal, smallest)
+	table.sort(vertical, smallest)
 	local count = 0
 	for i = 1, #tiles - 1 do
 		local ix = tiles[i][1]
@@ -57,15 +72,17 @@ local function part2(name)
 			local area = (1 + maxx - minx) * (1 + maxy - miny)
 			if area > count then
 				-- Check for lines through area.
-				for _, line in ipairs(horizontal) do
-					if line[2] > miny and line[2] < maxy and not (line[1] >= maxx or line[3] <= minx) then
+				for h = checkstart(horizontal, miny), #horizontal do
+					local line = horizontal[h]
+					if line[1] > miny and line[1] < maxy and not (line[2] >= maxx or line[3] <= minx) then
 						goto continue
-					elseif line[2] > maxy then
+					elseif line[1] > maxy then
 						break
 					end
 				end
-				for _, line in ipairs(vertical) do
-					if line[1] > minx and line[1] < maxx and not (line[2] >= maxy or line[4] <= miny) then
+				for v = checkstart(vertical, minx), #vertical do
+					local line = vertical[v]
+					if line[1] > minx and line[1] < maxx and not (line[2] >= maxy or line[3] <= miny) then
 						goto continue
 					elseif line[1] > maxx then
 						break
