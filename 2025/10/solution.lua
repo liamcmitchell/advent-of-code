@@ -51,15 +51,13 @@ local function part2(name)
 	local result = 0
 	for line in io.lines(name) do
 		local counters = {}
-		local countersum = 0
 		for num in string.gmatch(string.match(line, "%{.+%}"), "%d+") do
 			local target = tonumber(num)
-			table.insert(counters, { i = #counters, target = target, buttons = {} })
-			countersum = countersum + target
+			table.insert(counters, { target = target, buttons = {} })
 		end
 		local buttons = {}
 		for group in string.gmatch(line, "%(.-%)") do
-			local button = { i = #buttons, min = 0, max = 9999, counters = {}, saves = {} }
+			local button = { min = 0, max = 9999, counters = {}, saves = {} }
 			for num in string.gmatch(group, "%d+") do
 				local counter = counters[(tonumber(num) or 0) + 1]
 				button.max = math.min(button.max, counter.target)
@@ -79,13 +77,6 @@ local function part2(name)
 				button.min = saved[1]
 				button.max = saved[2]
 			end
-		end
-		local function permutations(counter)
-			local p = 1
-			for _, button in ipairs(counter.buttons) do
-				p = p * (1 + button.max - button.min)
-			end
-			return p
 		end
 		local function constrain()
 			local changed = true
@@ -122,17 +113,14 @@ local function part2(name)
 			end
 			return true
 		end
-		local function nexteasiest()
-			local lowesti = nil
-			local lowestp = nil
-			for i, counter in ipairs(counters) do
-				local p = permutations(counter)
-				if (not lowestp or p < lowestp) and p ~= 1 then
-					lowestp = p
-					lowesti = i
+		local function nextbutton()
+			local next = nil
+			for _, button in ipairs(buttons) do
+				if button.min < button.max and (not next or #button.counters > #next.counters) then
+					next = button
 				end
 			end
-			return lowesti
+			return next
 		end
 		local function check()
 			for _, counter in ipairs(counters) do
@@ -150,35 +138,28 @@ local function part2(name)
 			end
 			return presses
 		end
-		local function search(c, b)
-			if not c then
-				return check()
+		local function search()
+			if not constrain() then
+				return nil
 			end
-			local counter = counters[c]
-			local button = counter.buttons[b]
+			local button = nextbutton()
 			if not button then
-				return search(nexteasiest(), 1)
-			end
-			if button.min == button.max then
-				return search(c, b + 1)
+				return check()
 			end
 			local lowest = nil
 			for n = button.max, button.min, -1 do
 				save()
 				button.min = n
 				button.max = n
-				if constrain() then
-					local presses = search(c, b + 1)
-					if presses and (not lowest or presses < lowest) then
-						lowest = presses
-					end
+				local presses = search()
+				if presses and (not lowest or presses < lowest) then
+					lowest = presses
 				end
 				restore()
 			end
 			return lowest
 		end
-		constrain()
-		result = result + search(nexteasiest(), 1)
+		result = result + search()
 	end
 	print("Part 2 " .. name .. " " .. result .. " in " .. string.format("%.3f", os.clock() - start))
 end
